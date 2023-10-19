@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="black">#FF000000</color>
-    <color name="rounded_container_bg">#43434366</color>
+    <color name="light_gray">#43434366</color>
     <color name="light_dark">#1e1e1e</color>
+    <color name="white">#FF999999</color>
+    <color name="light_green">#70009999</color>
 </resources>

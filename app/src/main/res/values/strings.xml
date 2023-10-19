@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Image_view</string>
+    <string name="gallery">Gallery</string>
     <!-- TODO: Remove or change this placeholder text -->
 </resources>
