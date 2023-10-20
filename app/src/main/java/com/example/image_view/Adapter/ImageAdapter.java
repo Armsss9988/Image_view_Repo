@@ -78,7 +78,8 @@ public class ImageAdapter extends PagerAdapter {
             File newImg = new File(dataImg.get(position));
             Glide.with(context).load(newImg).into(imageView);
         }
-
+        imageView.setMaximumScale(15f);
+        imageView.setMediumScale(4f);
         imageView.setOnClickListener(view -> {
             Fragment fragment = main.fragmentScrollBtn;
             FragmentManager fm = main.fm;
