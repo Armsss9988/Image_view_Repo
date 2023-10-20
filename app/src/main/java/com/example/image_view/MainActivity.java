@@ -1,5 +1,6 @@
 package com.example.image_view;
 import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
+import static android.Manifest.permission.READ_MEDIA_IMAGES;
 import static android.os.Environment.MEDIA_MOUNTED;
 import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
 
@@ -11,21 +12,28 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
 
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.database.Cursor;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.SurfaceControl;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
 import com.example.image_view.Adapter.ImageAdapter;
+import com.example.image_view.Adapter.ImageListAdapter;
 import com.example.image_view.ImageView.GalleryView;
 import com.example.image_view.ImageView.ResourceView;
 
@@ -38,7 +46,8 @@ public class MainActivity extends AppCompatActivity{
 
 
     public static class NextPevFragment extends DialogFragment {
-    Button btnLeft, btnRight, btnSwitchView;
+    public Button btnLeft, btnRight, btnSwitchView;
+        RecyclerView recyclerView;
         public void prev(ViewPager viewPager) {
             viewPager.setCurrentItem(viewPager.getCurrentItem() - 1, true);
         }
@@ -64,9 +73,12 @@ public class MainActivity extends AppCompatActivity{
             View v = inflater.inflate(R.layout.next_prev_btn,container,false);
             btnLeft = v.findViewById(R.id.btn_left);
             btnRight = v.findViewById(R.id.btn_right);
+            recyclerView = v.findViewById(R.id.list_item);
+            recyclerView.setLayoutManager(new LinearLayoutManager(this.getActivity(),LinearLayoutManager.HORIZONTAL,false));
 /*            btnGallery = v.findViewById(R.id.btn_gallery);*/
             btnSwitchView = v.findViewById(R.id.btn_view_gallery);
             MainActivity main = (MainActivity) this.getContext();
+            recyclerView.setAdapter(new ImageListAdapter(main,main.resourceView.GetImages()));
             View mainView = main.getWindow().getDecorView();
             int width = mainView.getWidth();
             int height = mainView.getHeight();
@@ -82,16 +94,19 @@ public class MainActivity extends AppCompatActivity{
             });*/
             btnSwitchView.setOnClickListener(view -> {
                 if(btnSwitchView.getText() == getResources().getString(R.string.gallery)){
-                    main.checkPermissions();
-                    Log.i(TAG, "checked");
-                    if(main.permission){
+                    if(!main.isHasPermission()){
+                        main.checkPermissions();
+                    }
+                    else{
                         main.galleryView.GetGallery();
-                        btnSwitchView.setText("Resource");
+                        btnSwitchView.setText(R.string.resource);
+                        recyclerView.setAdapter(new ImageListAdapter(main,main.galleryView.GetImages()));
                     }
                 }
                 else{
                     main.resourceView.GetImageResource();
                     btnSwitchView.setText(getResources().getString(R.string.gallery));
+                    recyclerView.setAdapter(new ImageListAdapter(main,main.resourceView.GetImages()));
                 }
 
             });
@@ -100,14 +115,14 @@ public class MainActivity extends AppCompatActivity{
 
 
     }
-    ViewPager viewPager;
-    public Fragment fragmentScrollBtn;
+    public ViewPager viewPager;
+    public NextPevFragment fragmentScrollBtn;
     public FragmentManager fm;
+    public FragmentTransaction transaction;
     public ResourceView resourceView;
     public GalleryView galleryView;
     private static final int PERMISSION_REQUEST_CODE = 100;
-    boolean permission = false;
-
+    private String permissionString;
 
 
     //Creating Object of ViewPagerAdapter
@@ -116,29 +131,48 @@ public class MainActivity extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        permissionString = Build.VERSION.SDK_INT >= 33 ?  READ_MEDIA_IMAGES : READ_EXTERNAL_STORAGE;
         //Initializing the ViewPager Object
-        viewPager = (ViewPager)findViewById(R.id.viewPagerMain);
-        fragmentScrollBtn = new NextPevFragment();
+        viewPager = findViewById(R.id.viewPagerMain);
         fm = getSupportFragmentManager();
+        transaction = fm.beginTransaction();
         galleryView = new GalleryView(this,imageAdapter,viewPager);
         resourceView = new ResourceView(this,imageAdapter,viewPager);
         resourceView.GetImageResource();
-        fm.beginTransaction().add(R.id.fragmentContainerView2, fragmentScrollBtn).detach(fragmentScrollBtn).commit();
+        if(fm.findFragmentById(R.id.fragmentContainerView2) == null){
+            Log.i(TAG, "onCreate: no fragment");
+            fragmentScrollBtn = new NextPevFragment();
+            transaction.add(R.id.fragmentContainerView2, fragmentScrollBtn);
+        }
+        else{
+            Log.i(TAG, "onCreate: have fragment");
+            fragmentScrollBtn = (NextPevFragment) fm.findFragmentById(R.id.fragmentContainerView2);
+            transaction.remove(fragmentScrollBtn);
+            fragmentScrollBtn = new NextPevFragment();
+            transaction.add(R.id.fragmentContainerView2, fragmentScrollBtn);
+        }
+        transaction.commit();
 
     }
     private void checkPermissions() {
-        int result= ContextCompat.checkSelfPermission(this,READ_EXTERNAL_STORAGE);
-        if(result != PackageManager.PERMISSION_GRANTED){
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, READ_EXTERNAL_STORAGE)) {
-                ActivityCompat.requestPermissions(this,new String[]{READ_EXTERNAL_STORAGE},PERMISSION_REQUEST_CODE);
+        String permissionString = Build.VERSION.SDK_INT >= 33 ?  READ_MEDIA_IMAGES : READ_EXTERNAL_STORAGE;
+        if(isHasPermission()){
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, permissionString)) {
+                Toast.makeText(this,"Rational",Toast.LENGTH_SHORT).show();
+                ActivityCompat.requestPermissions(this,new String[]{permissionString},PERMISSION_REQUEST_CODE);
             }
             else{
-            ActivityCompat.requestPermissions(this,new String[]{READ_EXTERNAL_STORAGE},PERMISSION_REQUEST_CODE);
+                Toast.makeText(this,"Request Second Permission",Toast.LENGTH_SHORT).show();
+            ActivityCompat.requestPermissions(this,new String[]{permissionString},PERMISSION_REQUEST_CODE);
             }
         }
         else{
-            permission = true;
+            Toast.makeText(this,"Request New Permission",Toast.LENGTH_SHORT).show();
+            ActivityCompat.requestPermissions(this,new String[]{permissionString},PERMISSION_REQUEST_CODE);
         }
+    }
+    public boolean isHasPermission(){
+      return ContextCompat.checkSelfPermission(this,permissionString) == PackageManager.PERMISSION_GRANTED;
     }
 
     @Override
@@ -147,8 +181,9 @@ public class MainActivity extends AppCompatActivity{
         if(grantResults.length > 0){
             boolean accepted=grantResults[0]==PackageManager.PERMISSION_GRANTED;
             if(accepted){
-                permission = true;
                 Toast.makeText(this,"You have accepted the permission", Toast.LENGTH_LONG).show();
+                galleryView.GetGallery();
+                fragmentScrollBtn.btnSwitchView.setText(R.string.resource);
             }else{
                 Toast.makeText(this,"You have dined the permission", Toast.LENGTH_LONG).show();
             }

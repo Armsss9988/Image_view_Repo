@@ -6,12 +6,22 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal">
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/list_item"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/_30sdp"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentTop="true"
+            android:orientation="horizontal"
+            android:background="@drawable/right_swipe_image"
+            />
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btn_take_photo"
             android:visibility="invisible"
-            android:layout_width="@dimen/_150sdp"
-            android:layout_height="50dp"
-            android:layout_centerHorizontal="true"
+            android:layout_width="@dimen/_50sdp"
+            android:layout_height="@dimen/_50sdp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
             tools:ignore="RtlHardcoded" />
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btn_view_gallery"

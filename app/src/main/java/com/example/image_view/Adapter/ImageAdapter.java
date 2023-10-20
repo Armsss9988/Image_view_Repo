@@ -13,6 +13,7 @@ import com.github.chrisbanes.photoview.PhotoView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.viewpager.widget.PagerAdapter;
 
 import java.io.File;
@@ -83,15 +84,15 @@ public class ImageAdapter extends PagerAdapter {
         imageView.setOnClickListener(view -> {
             Fragment fragment = main.fragmentScrollBtn;
             FragmentManager fm = main.fm;
+            FragmentTransaction transaction = fm.beginTransaction();;
             if(fragment.isVisible()){
-                fm.beginTransaction()
-                        .detach(fragment)
-                        .commit();
+                transaction
+                        .hide(fragment);
             }else{
-                fm.beginTransaction()
-                        .attach(fragment)
-                        .commit();
+                transaction
+                        .show(fragment);
             }
+            transaction.commit();
         });
 
         //Adding the View

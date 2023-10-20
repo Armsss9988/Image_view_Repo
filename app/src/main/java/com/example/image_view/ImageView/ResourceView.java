@@ -9,9 +9,10 @@ import com.example.image_view.Adapter.ImageAdapter;
 import com.example.image_view.R;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 
 public class ResourceView {
-    public int[] images;
+    private int[] images;
     ImageAdapter imageAdapter;
     ViewPager viewPager;
     Context context;
@@ -19,7 +20,13 @@ public class ResourceView {
         this.context = context;
         this.imageAdapter = imageAdapter;
         this.viewPager = viewPager;
-    };
+    }
+    public int[] GetImages(){
+        return images;
+    }
+    public void SetImage(int[] images){
+        this.images = images;
+    }
     public void GetImageResource(){
 
         images = GetImageArray();

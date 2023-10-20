@@ -37,6 +37,12 @@ public class GalleryView{
         images = new ArrayList<>();
         loadImages();
     }
+    public ArrayList<String> GetImages(){
+        return images;
+    }
+    public void SetImage(ArrayList<String> images){
+        this.images = images;
+    }
 
     private void loadImages() {
         boolean SDCard = Environment.getExternalStorageState().equals(MEDIA_MOUNTED);
