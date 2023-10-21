@@ -23,6 +23,7 @@ import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Parcelable;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -30,6 +31,7 @@ import android.view.SurfaceControl;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.example.image_view.Adapter.ImageAdapter;
@@ -39,82 +41,10 @@ import com.example.image_view.ImageView.ResourceView;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity{
 
-
-
-
-    public static class NextPevFragment extends DialogFragment {
-    public Button btnLeft, btnRight, btnSwitchView;
-        RecyclerView recyclerView;
-        public void prev(ViewPager viewPager) {
-            viewPager.setCurrentItem(viewPager.getCurrentItem() - 1, true);
-        }
-
-        public void next(ViewPager viewPager) {
-            viewPager.setCurrentItem(viewPager.getCurrentItem() + 1, true);
-            Log.i(TAG, "next: " + viewPager.getCurrentItem());
-        }
-
-        void FixSizeView(View view , int width, int height){
-            ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
-            layoutParams.width = width/5;
-            layoutParams.height = height/4*3;
-            view.setLayoutParams(layoutParams);
-        }
-
-
-
-
-        @Nullable
-        @Override
-        public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-            View v = inflater.inflate(R.layout.next_prev_btn,container,false);
-            btnLeft = v.findViewById(R.id.btn_left);
-            btnRight = v.findViewById(R.id.btn_right);
-            recyclerView = v.findViewById(R.id.list_item);
-            recyclerView.setLayoutManager(new LinearLayoutManager(this.getActivity(),LinearLayoutManager.HORIZONTAL,false));
-/*            btnGallery = v.findViewById(R.id.btn_gallery);*/
-            btnSwitchView = v.findViewById(R.id.btn_view_gallery);
-            MainActivity main = (MainActivity) this.getContext();
-            recyclerView.setAdapter(new ImageListAdapter(main,main.resourceView.GetImages()));
-            View mainView = main.getWindow().getDecorView();
-            int width = mainView.getWidth();
-            int height = mainView.getHeight();
-            FixSizeView(btnLeft,width,height);
-            FixSizeView(btnRight,width,height);
-
-            
-            btnLeft.setOnClickListener(view -> prev(main.viewPager));
-            btnRight.setOnClickListener(view -> next(main.viewPager));
-/*            btnGallery.setOnClickListener(view -> {
-                main.mGetContent.launch("image/*");
-
-            });*/
-            btnSwitchView.setOnClickListener(view -> {
-                if(btnSwitchView.getText() == getResources().getString(R.string.gallery)){
-                    if(!main.isHasPermission()){
-                        main.checkPermissions();
-                    }
-                    else{
-                        main.galleryView.GetGallery();
-                        btnSwitchView.setText(R.string.resource);
-                        recyclerView.setAdapter(new ImageListAdapter(main,main.galleryView.GetImages()));
-                    }
-                }
-                else{
-                    main.resourceView.GetImageResource();
-                    btnSwitchView.setText(getResources().getString(R.string.gallery));
-                    recyclerView.setAdapter(new ImageListAdapter(main,main.resourceView.GetImages()));
-                }
-
-            });
-            return v;
-        }
-
-
-    }
     public ViewPager viewPager;
     public NextPevFragment fragmentScrollBtn;
     public FragmentManager fm;
@@ -147,9 +77,8 @@ public class MainActivity extends AppCompatActivity{
         else{
             Log.i(TAG, "onCreate: have fragment");
             fragmentScrollBtn = (NextPevFragment) fm.findFragmentById(R.id.fragmentContainerView2);
-            transaction.remove(fragmentScrollBtn);
-            fragmentScrollBtn = new NextPevFragment();
-            transaction.add(R.id.fragmentContainerView2, fragmentScrollBtn);
+            /*transaction.remove(fragmentScrollBtn);
+            transaction.add(R.id.fragmentContainerView2, fragmentScrollBtn);*/
         }
         transaction.commit();
 
@@ -223,6 +152,137 @@ public class MainActivity extends AppCompatActivity{
 
                 }
             });*/
+    public static class NextPevFragment extends DialogFragment {
+        public Button btnLeft, btnRight, btnSwitchView;
+        RecyclerView recyclerView;
+        LinearLayoutManager linearLayoutManager;
+        LinearLayout listPanel;
+        private final String BUTTON_VALUE_KEY = "Btn";
+        Parcelable listViewState = null;
+        ImageListAdapter adapterView = null;
+        private final String LIST_VIEW_KEY = "listKey";
+        private final String ADAPTER_VIEW_KEY = "adapterKey";
+        public void prev(ViewPager viewPager) {
+            viewPager.setCurrentItem(viewPager.getCurrentItem() - 1, true);
+        }
+
+        public void next(ViewPager viewPager) {
+            viewPager.setCurrentItem(viewPager.getCurrentItem() + 1, true);
+            Log.i(TAG, "next: " + viewPager.getCurrentItem());
+        }
+
+        void FixSizeView(View view , int width, int height){
+            ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
+            layoutParams.width = width;
+            layoutParams.height = height;
+            view.setLayoutParams(layoutParams);
+        }
+
+        @Override
+        public void onSaveInstanceState(@NonNull Bundle outState) {
+            Log.i(TAG, "onSave: firing");
+            outState.putString(BUTTON_VALUE_KEY,btnSwitchView.getText().toString());
+                listViewState = recyclerView.getLayoutManager().onSaveInstanceState();
+                outState.putParcelable(LIST_VIEW_KEY,listViewState);
+
+            super.onSaveInstanceState(outState);
+        }
+
+        @Override
+        public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+            super.onViewStateRestored(savedInstanceState);
+            Log.i(TAG, "onRestore: firing ");
+            if(savedInstanceState != null){
+                if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+                    listViewState = savedInstanceState.getParcelable(LIST_VIEW_KEY);
+                    Log.i(TAG, "onRestore: get Layout");
+                }
+            }
+        }
+
+
+        @Override
+        public void onResume() {
+            super.onResume();
+                Log.i(TAG, "onResume: firing");
+                if(listViewState != null){
+                    Log.i(TAG, "onResume: find list view");
+                    recyclerView.getLayoutManager().onRestoreInstanceState(listViewState);
+                }
+                else Log.i(TAG, "onResume: cant find listview");
+        }
+
+        void GetAppSize(View view){
+            view.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+                @Override
+                public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                    view.removeOnLayoutChangeListener(this);
+                    FixSizeView(btnLeft,view.getWidth()/4,view.getHeight()/4);
+                    FixSizeView(btnRight,view.getWidth()/4,view.getHeight()/4);
+                    FixSizeView(listPanel,view.getWidth(),view.getHeight()/9);
+                }
+            });
+        };
+
+
+        @Nullable
+        @Override
+        public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+            View v = inflater.inflate(R.layout.next_prev_btn,container,false);
+            MainActivity main = (MainActivity) container.getContext();
+            View mainView = main.getWindow().getDecorView();
+            btnLeft = v.findViewById(R.id.btn_left);
+            btnRight = v.findViewById(R.id.btn_right);
+            recyclerView = v.findViewById(R.id.list_item);
+            btnSwitchView = v.findViewById(R.id.btn_view_gallery);
+            listPanel = v.findViewById(R.id.list_panel);
+            GetAppSize(mainView);
+            linearLayoutManager = new LinearLayoutManager(this.getActivity(),LinearLayoutManager.HORIZONTAL,false);
+            recyclerView.setLayoutManager(linearLayoutManager);
+            recyclerView.setAdapter(new ImageListAdapter(main,main.resourceView.GetImages()));
+            if(savedInstanceState != null) {
+                btnSwitchView.setText(savedInstanceState.getString(BUTTON_VALUE_KEY));
+                if ((btnSwitchView.getText().toString().equals(getResources().getString(R.string.gallery)))) {
+                    Log.i(TAG, "onCreateView: show Recourse");
+                    main.resourceView.GetImageResource();
+                    recyclerView.setAdapter(new ImageListAdapter(main,main.resourceView.GetImages()));
+                } else {
+                    Log.i(TAG, "onCreateView: show Gallery");
+                    main.galleryView.GetGallery();
+                    recyclerView.setAdapter(new ImageListAdapter(main,main.galleryView.GetImages()));
+                }
+            }
+
+            /*            btnGallery = v.findViewById(R.id.btn_gallery);*/
+            btnLeft.setOnClickListener(view -> prev(main.viewPager));
+            btnRight.setOnClickListener(view -> next(main.viewPager));
+/*            btnGallery.setOnClickListener(view -> {
+                main.mGetContent.launch("image/*");
+
+            });*/
+            btnSwitchView.setOnClickListener(view -> {
+                if(btnSwitchView.getText() == getResources().getString(R.string.gallery)){
+                    if(!main.isHasPermission()){
+                        main.checkPermissions();
+                    }
+                    else{
+                        main.galleryView.GetGallery();
+                        btnSwitchView.setText(R.string.resource);
+                        recyclerView.setAdapter(new ImageListAdapter(main,main.galleryView.GetImages()));
+                    }
+                }
+                else{
+                    main.resourceView.GetImageResource();
+                    btnSwitchView.setText(R.string.gallery);
+                    recyclerView.setAdapter(new ImageListAdapter(main,main.resourceView.GetImages()));
+                }
+
+            });
+            return v;
+        }
+
+
+    }
 
 
 }

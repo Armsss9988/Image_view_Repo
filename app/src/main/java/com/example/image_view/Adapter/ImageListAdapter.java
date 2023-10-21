@@ -48,6 +48,7 @@ public class ImageListAdapter extends RecyclerView.Adapter<ImageListAdapter.Imag
         holder.imageView.setOnClickListener(view -> {
             Log.i(TAG, "onBindViewHolder: " + main.viewPager.getCurrentItem());
             main.viewPager.setCurrentItem(position);
+
         });
     }
 
