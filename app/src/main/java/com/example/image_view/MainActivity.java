@@ -177,17 +177,22 @@ public class MainActivity extends AppCompatActivity{
             layoutParams.height = height;
             view.setLayoutParams(layoutParams);
         }
-        public void ScrollCenterItem(int position){
-            int first = linearLayoutManager.findFirstVisibleItemPosition();
-            int last = linearLayoutManager.findLastVisibleItemPosition();
-            int center = (last - first + 1)/2;
-            if(position >= center){
-                if(position < (first + center) ){
-                    recyclerView.smoothScrollToPosition(position-center);
+        public void ScrollCenterItem(int itemToScroll) {
+            try{
+                int centerOfScreen;
+                if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
+                    centerOfScreen = recyclerView.getWidth() / 2 - (recyclerView.getWidth()/10);
                 }
-                else recyclerView.smoothScrollToPosition(position+center);
+                else{
+                    centerOfScreen = recyclerView.getWidth() / 2 - (recyclerView.getWidth()/20);
+                }
+
+                linearLayoutManager.scrollToPositionWithOffset(itemToScroll, centerOfScreen);
             }
-            else recyclerView.smoothScrollToPosition(0);
+            catch (Exception e){
+                Log.i(TAG, "ScrollCenterItem: cant scroll");
+            }
+            
         }
 
         @Override
@@ -204,13 +209,18 @@ public class MainActivity extends AppCompatActivity{
                     view.removeOnLayoutChangeListener(this);
                     FixSizeView(btnLeft,view.getWidth()/4,view.getHeight()/4);
                     FixSizeView(btnRight,view.getWidth()/4,view.getHeight()/4);
-                    FixSizeView(listPanel,view.getWidth(),view.getHeight()/9);
+                    if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
+                        FixSizeView(listPanel,view.getWidth(),view.getHeight()/17);
+                        FixSizeView(recyclerView,view.getWidth(),view.getHeight()/19);
+                    }
+                    else{
+                        FixSizeView(listPanel,view.getWidth(),view.getHeight()/7);
+                        FixSizeView(recyclerView,view.getWidth(),view.getHeight()/9);
+                    }
+
                 }
             });
         }
-
-
-
         @Nullable
         @Override
         public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -239,17 +249,23 @@ public class MainActivity extends AppCompatActivity{
                 }
             }
 
-
+            ImageListAdapter adapter = (ImageListAdapter) recyclerView.getAdapter();
             /*            btnGallery = v.findViewById(R.id.btn_gallery);*/
             btnLeft.setOnClickListener(view -> {
+                adapter.previousExpandedPosition = main.viewPager.getCurrentItem();
                 prev(main.viewPager);
+                adapter.mExpandedPosition = main.viewPager.getCurrentItem();
                 ScrollCenterItem(main.viewPager.getCurrentItem());
-
+                adapter.notifyItemChanged(adapter.mExpandedPosition);
+                adapter.notifyItemChanged(adapter.previousExpandedPosition );
             });
             btnRight.setOnClickListener(view -> {
+                adapter.previousExpandedPosition = main.viewPager.getCurrentItem();
                 next(main.viewPager);
+                adapter.mExpandedPosition = main.viewPager.getCurrentItem();
                 ScrollCenterItem(main.viewPager.getCurrentItem());
-
+                adapter.notifyItemChanged(adapter.mExpandedPosition);
+                adapter.notifyItemChanged(adapter.previousExpandedPosition );
             });
 /*            btnGallery.setOnClickListener(view -> {
                 main.mGetContent.launch("image/*");

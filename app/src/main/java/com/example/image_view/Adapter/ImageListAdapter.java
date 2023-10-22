@@ -4,6 +4,7 @@ import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -28,8 +29,8 @@ public class ImageListAdapter extends RecyclerView.Adapter<ImageListAdapter.Imag
     private Integer[] resourceImages;
     private Context context;
     private ArrayList<String> galleryImages;
-    private int previousExpandedPosition = -1;
-    private int mExpandedPosition = -1;
+    public int previousExpandedPosition = 0;
+    public int mExpandedPosition = 0;
     public ImageListAdapter(Context context, ArrayList<String> galleryImages){
         this.galleryImages = galleryImages;
         this.resourceImages = null;
@@ -51,18 +52,41 @@ public class ImageListAdapter extends RecyclerView.Adapter<ImageListAdapter.Imag
     public void onBindViewHolder(@NonNull ImageListViewHolder holder, @SuppressLint("RecyclerView") int position) {
         if(galleryImages != null)holder.imageView.setImageURI(Uri.parse(galleryImages.get(position)));
         else holder.imageView.setImageResource(resourceImages[position]);
+        holder.cardView.setBackgroundResource(R.drawable.card_view_style);
         MainActivity main = (MainActivity) context;
         MainActivity.NextPevFragment fragment = (MainActivity.NextPevFragment) main.getSupportFragmentManager().findFragmentById(R.id.fragmentContainerView2);
-
+        ViewGroup.LayoutParams expandedView = holder.cardView.getLayoutParams();
+        View viewMain = main.getWindow().getDecorView();
         final boolean isExpanded = (position == mExpandedPosition);
-        if(isExpanded){
-            ViewGroup.LayoutParams expandedView = holder.cardView.getLayoutParams();
-            expandedView.width = expandedView.width+50;
-            holder.cardView.setLayoutParams(expandedView);
-        }
+        viewMain.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+            @Override
+            public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                viewMain.removeOnLayoutChangeListener(this);
+                if(main.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
+                    expandedView.width = viewMain.getWidth()/10;
+                    expandedView.height = viewMain.getHeight()/20;
+                    if(isExpanded){
+                        expandedView.width = viewMain.getWidth()/5;
+                        holder.cardView.setLayoutParams(expandedView);
+                    }
+                }
+                else{
+                    expandedView.width = viewMain.getWidth()/20;
+                    expandedView.height = viewMain.getHeight()/10;
+                    if(isExpanded){
+                        expandedView.width = viewMain.getWidth()/10;
+                        holder.cardView.setLayoutParams(expandedView);
+                    }
+                }
+
+
+            }
+        });
+
+        holder.cardView.setLayoutParams(expandedView);
         if (isExpanded) previousExpandedPosition = position;
         holder.cardView.setOnClickListener(view -> {
-            mExpandedPosition = isExpanded ? -1: position;
+            if(!isExpanded) mExpandedPosition = position;
             main.viewPager.setCurrentItem(position);
             fragment.ScrollCenterItem(position);
             notifyItemChanged(previousExpandedPosition);
