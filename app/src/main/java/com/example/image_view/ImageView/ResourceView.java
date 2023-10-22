@@ -1,18 +1,25 @@
 package com.example.image_view.ImageView;
 
+import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
+
 import android.content.Context;
+import android.net.Uri;
+import android.util.Log;
+import android.util.TypedValue;
 
 import androidx.viewpager.widget.ViewPager;
 
 import com.example.image_view.Adapter.ImageAdapter;
 import com.example.image_view.Adapter.ImageAdapter;
 import com.example.image_view.R;
+import com.github.chrisbanes.photoview.BuildConfig;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.regex.Pattern;
 
 public class ResourceView {
-    private int[] images;
+    private Integer[] images;
     ImageAdapter imageAdapter;
     ViewPager viewPager;
     Context context;
@@ -21,10 +28,10 @@ public class ResourceView {
         this.imageAdapter = imageAdapter;
         this.viewPager = viewPager;
     }
-    public int[] GetImages(){
+    public Integer[] GetImages(){
         return images;
     }
-    public void SetImage(int[] images){
+    public void SetImage(Integer[] images){
         this.images = images;
     }
     public void GetImageResource(){
@@ -37,17 +44,31 @@ public class ResourceView {
         //Adding the Adapter to the ViewPager
         viewPager.setAdapter(imageAdapter);
     }
-    int[] GetImageArray(){
+    Integer[] GetImageArray(){
         Field[] ID_Fields = R.drawable.class.getDeclaredFields();
-        int[] resArray = new int[ID_Fields.length];
+        ArrayList<Integer> resArray = new ArrayList<>();
+        Pattern pattern = Pattern.compile("(.*/)*.+\\.(png|jpg|gif|bmp|jpeg|PNG|JPG|GIF|BMP|JPEG)$");
         for(int i = 0; i < ID_Fields.length; i++) {
+            TypedValue value = new TypedValue();
+            String filename = ID_Fields[i].getName();
+            int rawId = context.getResources().getIdentifier(filename, "drawable", context.getPackageName());
+            context.getResources().getValue(rawId, value, true);
+            String type = value.toString().split(" ")[1];
+            type = type.substring(14,type.length()-1);
+            Log.i(TAG, "GetImageArray: "+ i + ": " + filename);
+            Log.i(TAG, "GetImageArray: "+ i + ": " + rawId);
+            Log.i(TAG, "GetImageArray: "+ i + ": " + type);
             try {
-                resArray[i] = ID_Fields[i].getInt(null);
+                if(pattern.matcher(type).find()){
+                    resArray.add(ID_Fields[i].getInt(null));
+                }
+
             } catch (IllegalAccessException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
-        return resArray;
+        Integer[] intArr = resArray.toArray(new Integer[resArray.size()]);
+        return intArr;
     }
 }

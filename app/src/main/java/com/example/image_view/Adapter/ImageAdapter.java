@@ -25,24 +25,24 @@ public class ImageAdapter extends PagerAdapter {
     //Context object
     Context context;
 
-    //Array of images
-    public int[] images;
+    //Array of image
     public ArrayList<String> dataImg;
+    public Integer[] images;
 
     //Layout Inflater
     LayoutInflater mLayoutInflater;
     PhotoView imageView;
 
     //Viewpager Constructor
-    public ImageAdapter(Context context, int[] images) {
+    public ImageAdapter(Context context, Integer[] images) {
         this.context = context;
         this.images = images;
         this.dataImg = null;
         mLayoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
-    public ImageAdapter(Context context, ArrayList<String> images) {
+    public ImageAdapter(Context context, ArrayList<String> dataImg) {
         this.context = context;
-        this.dataImg = images;
+        this.dataImg = dataImg;
         this.images = null;
         mLayoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
@@ -66,11 +66,10 @@ public class ImageAdapter extends PagerAdapter {
     public Object instantiateItem(@NonNull ViewGroup container, final int position) {
         //inflating the item.xml
         View itemView = mLayoutInflater.inflate(R.layout.item, container, false);
-
         //referencing the image view from the item.xml file
         imageView = itemView.findViewById(R.id.imageViewMain);
         MainActivity main =(MainActivity) container.getContext();
-
+        View recView;
         //setting the image in the imageView
         if(images != null){
             imageView.setImageResource(images[position]);

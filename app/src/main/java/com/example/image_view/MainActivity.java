@@ -154,16 +154,16 @@ public class MainActivity extends AppCompatActivity{
             });*/
     public static class NextPevFragment extends DialogFragment {
         public Button btnLeft, btnRight, btnSwitchView;
-        RecyclerView recyclerView;
-        LinearLayoutManager linearLayoutManager;
-        LinearLayout listPanel;
+        public RecyclerView recyclerView;
+        public LinearLayoutManager linearLayoutManager;
+        public LinearLayout listPanel;
         private final String BUTTON_VALUE_KEY = "Btn";
         Parcelable listViewState = null;
-        ImageListAdapter adapterView = null;
         private final String LIST_VIEW_KEY = "listKey";
-        private final String ADAPTER_VIEW_KEY = "adapterKey";
         public void prev(ViewPager viewPager) {
             viewPager.setCurrentItem(viewPager.getCurrentItem() - 1, true);
+            Log.i(TAG, "next: " + viewPager.getCurrentItem());
+
         }
 
         public void next(ViewPager viewPager) {
@@ -177,39 +177,24 @@ public class MainActivity extends AppCompatActivity{
             layoutParams.height = height;
             view.setLayoutParams(layoutParams);
         }
+        public void ScrollCenterItem(int position){
+            int first = linearLayoutManager.findFirstVisibleItemPosition();
+            int last = linearLayoutManager.findLastVisibleItemPosition();
+            int center = (last - first + 1)/2;
+            if(position >= center){
+                if(position < (first + center) ){
+                    recyclerView.smoothScrollToPosition(position-center);
+                }
+                else recyclerView.smoothScrollToPosition(position+center);
+            }
+            else recyclerView.smoothScrollToPosition(0);
+        }
 
         @Override
         public void onSaveInstanceState(@NonNull Bundle outState) {
             Log.i(TAG, "onSave: firing");
             outState.putString(BUTTON_VALUE_KEY,btnSwitchView.getText().toString());
-                listViewState = recyclerView.getLayoutManager().onSaveInstanceState();
-                outState.putParcelable(LIST_VIEW_KEY,listViewState);
-
             super.onSaveInstanceState(outState);
-        }
-
-        @Override
-        public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
-            super.onViewStateRestored(savedInstanceState);
-            Log.i(TAG, "onRestore: firing ");
-            if(savedInstanceState != null){
-                if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-                    listViewState = savedInstanceState.getParcelable(LIST_VIEW_KEY);
-                    Log.i(TAG, "onRestore: get Layout");
-                }
-            }
-        }
-
-
-        @Override
-        public void onResume() {
-            super.onResume();
-                Log.i(TAG, "onResume: firing");
-                if(listViewState != null){
-                    Log.i(TAG, "onResume: find list view");
-                    recyclerView.getLayoutManager().onRestoreInstanceState(listViewState);
-                }
-                else Log.i(TAG, "onResume: cant find listview");
         }
 
         void GetAppSize(View view){
@@ -222,7 +207,8 @@ public class MainActivity extends AppCompatActivity{
                     FixSizeView(listPanel,view.getWidth(),view.getHeight()/9);
                 }
             });
-        };
+        }
+
 
 
         @Nullable
@@ -253,9 +239,18 @@ public class MainActivity extends AppCompatActivity{
                 }
             }
 
+
             /*            btnGallery = v.findViewById(R.id.btn_gallery);*/
-            btnLeft.setOnClickListener(view -> prev(main.viewPager));
-            btnRight.setOnClickListener(view -> next(main.viewPager));
+            btnLeft.setOnClickListener(view -> {
+                prev(main.viewPager);
+                ScrollCenterItem(main.viewPager.getCurrentItem());
+
+            });
+            btnRight.setOnClickListener(view -> {
+                next(main.viewPager);
+                ScrollCenterItem(main.viewPager.getCurrentItem());
+
+            });
 /*            btnGallery.setOnClickListener(view -> {
                 main.mGetContent.launch("image/*");
 
