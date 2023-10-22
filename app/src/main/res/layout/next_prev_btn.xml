@@ -25,14 +25,6 @@
                     />
 
         </LinearLayout>
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btn_take_photo"
-            android:layout_width="@dimen/_50sdp"
-            android:layout_height="@dimen/_50sdp"
-            android:layout_alignParentBottom="true"
-            android:layout_alignStart="@id/btn_view_gallery"
-            tools:ignore="RtlHardcoded" />
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btn_view_gallery"
             android:layout_width="@dimen/_150sdp"

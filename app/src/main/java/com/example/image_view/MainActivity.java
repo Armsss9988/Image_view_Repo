@@ -121,37 +121,6 @@ public class MainActivity extends AppCompatActivity{
         }
     }
 
-    /*ActivityResultLauncher<String> mGetContent = registerForActivityResult(new ActivityResultContracts.GetContent(),
-            uri -> {
-                Bitmap bitmap = null;
-                ContentResolver contentResolver = getContentResolver();
-                try {
-                    if(Build.VERSION.SDK_INT < 28) {
-                        bitmap = MediaStore.Images.Media.getBitmap(contentResolver, uri);
-                    } else {
-                        ImageDecoder.Source source = ImageDecoder.createSource(contentResolver, uri);
-                        bitmap = ImageDecoder.decodeBitmap(source);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                if(bitmap!=null){
-                    Calendar c = Calendar.getInstance();
-                    String new_Date = c.get(Calendar.DAY_OF_MONTH) + "-"
-                            + ((c.get(Calendar.MONTH)) + 1) + "-"
-                            + c.get(Calendar.YEAR) + " " + c.get(Calendar.HOUR)
-                            + "-" + c.get(Calendar.MINUTE) + "-"
-                            + c.get(Calendar.SECOND);
-
-                    try{
-                        MediaStore.Images.Media.insertImage(getContentResolver(),bitmap,new_Date,"image:"+new_Date);
-                        Log.i(TAG, "onActivityResult: img saved");
-                    }catch (Exception e){
-                        Log.i(TAG, "onActivityResult: img cant saved");
-                    }
-
-                }
-            });*/
     public static class NextPevFragment extends DialogFragment {
         public Button btnLeft, btnRight, btnSwitchView;
         public RecyclerView recyclerView;
@@ -165,12 +134,10 @@ public class MainActivity extends AppCompatActivity{
             Log.i(TAG, "next: " + viewPager.getCurrentItem());
 
         }
-
         public void next(ViewPager viewPager) {
             viewPager.setCurrentItem(viewPager.getCurrentItem() + 1, true);
             Log.i(TAG, "next: " + viewPager.getCurrentItem());
         }
-
         void FixSizeView(View view , int width, int height){
             ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
             layoutParams.width = width;
