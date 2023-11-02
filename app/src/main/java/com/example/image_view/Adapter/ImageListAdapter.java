@@ -24,13 +24,14 @@ import com.example.image_view.MainActivity;
 import com.example.image_view.R;
 
 import java.util.ArrayList;
+import java.util.Dictionary;
 
 public class ImageListAdapter extends RecyclerView.Adapter<ImageListAdapter.ImageListViewHolder> {
     private Integer[] resourceImages;
     private Context context;
     private ArrayList<String> galleryImages;
-    public int previousExpandedPosition = 0;
-    public int mExpandedPosition = 0;
+    public int previousExpandedPosition = -1;
+    public int mExpandedPosition = -1;
     public ImageListAdapter(Context context, ArrayList<String> galleryImages){
         this.galleryImages = galleryImages;
         this.resourceImages = null;
@@ -40,6 +41,9 @@ public class ImageListAdapter extends RecyclerView.Adapter<ImageListAdapter.Imag
         this.resourceImages = resourceImages;
         this.galleryImages = null;
         this.context = context;
+    }
+    public boolean isResourceList(){
+        return this.resourceImages != null;
     }
     @NonNull
     @Override
@@ -57,7 +61,7 @@ public class ImageListAdapter extends RecyclerView.Adapter<ImageListAdapter.Imag
         MainActivity.NextPevFragment fragment = (MainActivity.NextPevFragment) main.getSupportFragmentManager().findFragmentById(R.id.fragmentContainerView2);
         ViewGroup.LayoutParams expandedView = holder.cardView.getLayoutParams();
         View viewMain = main.getWindow().getDecorView();
-        final boolean isExpanded = (position == mExpandedPosition);
+        boolean isExpanded = (position == mExpandedPosition);
         viewMain.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
             @Override
             public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
@@ -88,6 +92,8 @@ public class ImageListAdapter extends RecyclerView.Adapter<ImageListAdapter.Imag
         holder.cardView.setOnClickListener(view -> {
             if(!isExpanded) mExpandedPosition = position;
             main.viewPager.setCurrentItem(position);
+            if(galleryImages != null) fragment.setCurrentGalleryPosition(position);
+            else fragment.setCurrentResourcePosition(position);
             fragment.ScrollCenterItem(position);
             notifyItemChanged(previousExpandedPosition);
             notifyItemChanged(position);
@@ -99,8 +105,19 @@ public class ImageListAdapter extends RecyclerView.Adapter<ImageListAdapter.Imag
     public int getItemCount() {
         return (galleryImages != null) ? galleryImages.size() : resourceImages.length;
     }
+
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return position;
+    }
+
     public static class ImageListViewHolder extends RecyclerView.ViewHolder{
-            ImageView imageView, expanded;
+            ImageView imageView;
             CardView cardView;
 
         public ImageListViewHolder(@NonNull View itemView) {

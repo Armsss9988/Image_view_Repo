@@ -55,16 +55,12 @@ public class ResourceView {
             context.getResources().getValue(rawId, value, true);
             String type = value.toString().split(" ")[1];
             type = type.substring(14,type.length()-1);
-            Log.i(TAG, "GetImageArray: "+ i + ": " + filename);
-            Log.i(TAG, "GetImageArray: "+ i + ": " + rawId);
-            Log.i(TAG, "GetImageArray: "+ i + ": " + type);
             try {
                 if(pattern.matcher(type).find()){
                     resArray.add(ID_Fields[i].getInt(null));
                 }
 
             } catch (IllegalAccessException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }

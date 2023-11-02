@@ -54,15 +54,12 @@ public class MainActivity extends AppCompatActivity{
     private static final int PERMISSION_REQUEST_CODE = 100;
     private String permissionString;
 
-
-    //Creating Object of ViewPagerAdapter
     ImageAdapter imageAdapter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         permissionString = Build.VERSION.SDK_INT >= 33 ?  READ_MEDIA_IMAGES : READ_EXTERNAL_STORAGE;
-        //Initializing the ViewPager Object
         viewPager = findViewById(R.id.viewPagerMain);
         fm = getSupportFragmentManager();
         transaction = fm.beginTransaction();
@@ -77,8 +74,6 @@ public class MainActivity extends AppCompatActivity{
         else{
             Log.i(TAG, "onCreate: have fragment");
             fragmentScrollBtn = (NextPevFragment) fm.findFragmentById(R.id.fragmentContainerView2);
-            /*transaction.remove(fragmentScrollBtn);
-            transaction.add(R.id.fragmentContainerView2, fragmentScrollBtn);*/
         }
         transaction.commit();
 
@@ -125,17 +120,34 @@ public class MainActivity extends AppCompatActivity{
         public Button btnLeft, btnRight, btnSwitchView;
         public RecyclerView recyclerView;
         public LinearLayoutManager linearLayoutManager;
+        public ImageListAdapter adapter;
         public LinearLayout listPanel;
         private final String BUTTON_VALUE_KEY = "Btn";
-        Parcelable listViewState = null;
-        private final String LIST_VIEW_KEY = "listKey";
+        private int currentGalleryPosition = 0;
+        private int currentResourcePosition = 0;
+        private final String CURRENT_GALLERY_POSITION = "cusgalpos";
+        private final String CURRENT_RESOURCE_POSITION = "cusrespos";
+        public void setCurrentGalleryPosition(int newPos){
+            this.currentGalleryPosition = newPos;
+        }
+        public void setCurrentResourcePosition(int newPos){
+            this.currentResourcePosition = newPos;
+        }
         public void prev(ViewPager viewPager) {
+            adapter.previousExpandedPosition = viewPager.getCurrentItem();
             viewPager.setCurrentItem(viewPager.getCurrentItem() - 1, true);
+            adapter.mExpandedPosition = viewPager.getCurrentItem();
+            adapter.notifyItemChanged(adapter.previousExpandedPosition);
+            adapter.notifyItemChanged(adapter.mExpandedPosition);
             Log.i(TAG, "next: " + viewPager.getCurrentItem());
 
         }
         public void next(ViewPager viewPager) {
+            adapter.previousExpandedPosition = viewPager.getCurrentItem();
             viewPager.setCurrentItem(viewPager.getCurrentItem() + 1, true);
+            adapter.mExpandedPosition = viewPager.getCurrentItem();
+            adapter.notifyItemChanged(adapter.previousExpandedPosition);
+            adapter.notifyItemChanged(adapter.mExpandedPosition);
             Log.i(TAG, "next: " + viewPager.getCurrentItem());
         }
         void FixSizeView(View view , int width, int height){
@@ -166,6 +178,8 @@ public class MainActivity extends AppCompatActivity{
         public void onSaveInstanceState(@NonNull Bundle outState) {
             Log.i(TAG, "onSave: firing");
             outState.putString(BUTTON_VALUE_KEY,btnSwitchView.getText().toString());
+            outState.putInt(CURRENT_GALLERY_POSITION, currentGalleryPosition);
+            outState.putInt(CURRENT_RESOURCE_POSITION, currentResourcePosition);
             super.onSaveInstanceState(outState);
         }
 
@@ -188,6 +202,13 @@ public class MainActivity extends AppCompatActivity{
                 }
             });
         }
+        void SetAdapterWithPosition(int currentPos, ViewPager viewPager){
+            recyclerView.setAdapter(adapter);
+            adapter.mExpandedPosition = currentPos;
+            adapter.notifyItemChanged(currentPos);
+            ScrollCenterItem(currentPos);
+            viewPager.setCurrentItem(currentPos);
+        }
         @Nullable
         @Override
         public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -202,62 +223,60 @@ public class MainActivity extends AppCompatActivity{
             GetAppSize(mainView);
             linearLayoutManager = new LinearLayoutManager(this.getActivity(),LinearLayoutManager.HORIZONTAL,false);
             recyclerView.setLayoutManager(linearLayoutManager);
-            recyclerView.setAdapter(new ImageListAdapter(main,main.resourceView.GetImages()));
             if(savedInstanceState != null) {
                 btnSwitchView.setText(savedInstanceState.getString(BUTTON_VALUE_KEY));
+                currentResourcePosition = savedInstanceState.getInt(CURRENT_RESOURCE_POSITION);
+                currentGalleryPosition = savedInstanceState.getInt(CURRENT_GALLERY_POSITION);
                 if ((btnSwitchView.getText().toString().equals(getResources().getString(R.string.gallery)))) {
                     Log.i(TAG, "onCreateView: show Recourse");
                     main.resourceView.GetImageResource();
-                    recyclerView.setAdapter(new ImageListAdapter(main,main.resourceView.GetImages()));
+                    adapter = new ImageListAdapter(main,main.resourceView.GetImages());
+                    SetAdapterWithPosition(currentResourcePosition,main.viewPager);
                 } else {
-                    Log.i(TAG, "onCreateView: show Gallery");
+                    Log.i(TAG, "onCreateView: show Recourse");
                     main.galleryView.GetGallery();
-                    recyclerView.setAdapter(new ImageListAdapter(main,main.galleryView.GetImages()));
+                    adapter = new ImageListAdapter(main,main.galleryView.GetImages());
+                    SetAdapterWithPosition(currentGalleryPosition,main.viewPager);
                 }
             }
-
-            ImageListAdapter adapter = (ImageListAdapter) recyclerView.getAdapter();
-            /*            btnGallery = v.findViewById(R.id.btn_gallery);*/
+            else{
+                adapter = new ImageListAdapter(main,main.resourceView.GetImages());
+                recyclerView.setAdapter(adapter);
+                SetAdapterWithPosition(currentResourcePosition, main.viewPager);
+            }
             btnLeft.setOnClickListener(view -> {
-                adapter.previousExpandedPosition = main.viewPager.getCurrentItem();
                 prev(main.viewPager);
-                adapter.mExpandedPosition = main.viewPager.getCurrentItem();
                 ScrollCenterItem(main.viewPager.getCurrentItem());
-                adapter.notifyItemChanged(adapter.mExpandedPosition);
-                adapter.notifyItemChanged(adapter.previousExpandedPosition );
             });
             btnRight.setOnClickListener(view -> {
-                adapter.previousExpandedPosition = main.viewPager.getCurrentItem();
                 next(main.viewPager);
-                adapter.mExpandedPosition = main.viewPager.getCurrentItem();
                 ScrollCenterItem(main.viewPager.getCurrentItem());
-                adapter.notifyItemChanged(adapter.mExpandedPosition);
-                adapter.notifyItemChanged(adapter.previousExpandedPosition );
             });
-/*            btnGallery.setOnClickListener(view -> {
-                main.mGetContent.launch("image/*");
-
-            });*/
             btnSwitchView.setOnClickListener(view -> {
                 if(btnSwitchView.getText() == getResources().getString(R.string.gallery)){
                     if(!main.isHasPermission()){
                         main.checkPermissions();
                     }
                     else{
+                        currentResourcePosition = main.viewPager.getCurrentItem();
                         main.galleryView.GetGallery();
                         btnSwitchView.setText(R.string.resource);
-                        recyclerView.setAdapter(new ImageListAdapter(main,main.galleryView.GetImages()));
+                        adapter = new ImageListAdapter(main,main.galleryView.GetImages());
+                        SetAdapterWithPosition(currentGalleryPosition,main.viewPager);
                     }
                 }
                 else{
+                    currentGalleryPosition = main.viewPager.getCurrentItem();
                     main.resourceView.GetImageResource();
                     btnSwitchView.setText(R.string.gallery);
-                    recyclerView.setAdapter(new ImageListAdapter(main,main.resourceView.GetImages()));
+                    adapter = new ImageListAdapter(main,main.resourceView.GetImages());
+                    SetAdapterWithPosition(currentResourcePosition, main.viewPager);
                 }
 
             });
             return v;
         }
+
 
 
     }
