@@ -20,31 +20,22 @@ import java.util.regex.Pattern;
 
 public class ResourceView {
     private Integer[] images;
-    ImageAdapter imageAdapter;
-    ViewPager viewPager;
-    Context context;
-    public ResourceView(Context context, ImageAdapter imageAdapter, ViewPager viewPager){
-        this.context = context;
-        this.imageAdapter = imageAdapter;
-        this.viewPager = viewPager;
+    private static ResourceView instance = null;
+
+    public static synchronized ResourceView getInstance(Context context){
+        if(instance == null){
+            instance = new ResourceView(context);
+        }
+        return instance;
+    }
+
+    public ResourceView(Context context){
+        this.images = GetImageArray(context);
     }
     public Integer[] GetImages(){
         return images;
     }
-    public void SetImage(Integer[] images){
-        this.images = images;
-    }
-    public void GetImageResource(){
-
-        images = GetImageArray();
-
-        //Initializing the ViewPagerAdapter
-        imageAdapter = new ImageAdapter(context, images);
-
-        //Adding the Adapter to the ViewPager
-        viewPager.setAdapter(imageAdapter);
-    }
-    Integer[] GetImageArray(){
+    Integer[] GetImageArray(Context context){
         Field[] ID_Fields = R.drawable.class.getDeclaredFields();
         ArrayList<Integer> resArray = new ArrayList<>();
         Pattern pattern = Pattern.compile("(.*/)*.+\\.(png|jpg|gif|bmp|jpeg|PNG|JPG|GIF|BMP|JPEG)$");
@@ -64,7 +55,6 @@ public class ResourceView {
                 e.printStackTrace();
             }
         }
-        Integer[] intArr = resArray.toArray(new Integer[resArray.size()]);
-        return intArr;
+        return resArray.toArray(new Integer[resArray.size()]);
     }
 }

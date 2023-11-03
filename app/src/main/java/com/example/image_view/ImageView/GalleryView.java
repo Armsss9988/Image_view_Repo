@@ -25,26 +25,23 @@ import java.util.ArrayList;
 public class GalleryView{
 
     private ArrayList<String> images;
-    private Context context;
-    private ImageAdapter imageAdapter;
-    private ViewPager viewPager;
-    public GalleryView(Context context, ImageAdapter imageAdapter, ViewPager viewPager){
-        this.context = context;
-        this.imageAdapter = imageAdapter;
-        this.viewPager = viewPager;
+    private static GalleryView instance = null;
+    public GalleryView(Context context){
+        this.images = loadImages(context);
     }
-    public void GetGallery(){
-        images = new ArrayList<>();
-        loadImages();
+    public static synchronized GalleryView getInstance(Context context){
+        if(instance == null){
+            instance = new GalleryView(context);
+        }
+        return instance;
     }
+
     public ArrayList<String> GetImages(){
         return images;
     }
-    public void SetImage(ArrayList<String> images){
-        this.images = images;
-    }
 
-    private void loadImages() {
+    private ArrayList<String> loadImages(Context context) {
+        ArrayList<String> imgLoaded = new ArrayList<>();
         boolean SDCard = Environment.getExternalStorageState().equals(MEDIA_MOUNTED);
         Log.i(TAG, "loadImages: start");
         if (SDCard) {
@@ -56,11 +53,9 @@ public class GalleryView{
             for (int i = 0; i < count; i++) {
                 cursor.moveToPosition(i);
                 int colunmindex = cursor.getColumnIndex(MediaStore.Images.Media.DATA);
-                images.add(cursor.getString(colunmindex));
+                imgLoaded.add(cursor.getString(colunmindex));
             }
-            imageAdapter = new ImageAdapter(context, images);
-            imageAdapter.notifyDataSetChanged();
-            viewPager.setAdapter(imageAdapter);
         }
+        return imgLoaded;
     }
 }

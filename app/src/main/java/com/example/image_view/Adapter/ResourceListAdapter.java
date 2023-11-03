@@ -1,49 +1,34 @@
 package com.example.image_view.Adapter;
 
-import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.net.Uri;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.GridLayout;
-import android.widget.GridView;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.view.menu.MenuView;
 import androidx.cardview.widget.CardView;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.image_view.MainActivity;
+import com.example.image_view.MainViewModel;
 import com.example.image_view.R;
 
 import java.util.ArrayList;
-import java.util.Dictionary;
 
-public class ImageListAdapter extends RecyclerView.Adapter<ImageListAdapter.ImageListViewHolder> {
+public class ResourceListAdapter extends RecyclerView.Adapter<ResourceListAdapter.ImageListViewHolder> {
     private Integer[] resourceImages;
     private Context context;
-    private ArrayList<String> galleryImages;
-    public int previousExpandedPosition = -1;
-    public int mExpandedPosition = -1;
-    public ImageListAdapter(Context context, ArrayList<String> galleryImages){
-        this.galleryImages = galleryImages;
-        this.resourceImages = null;
-        this.context = context;
-    }
-    public ImageListAdapter(Context context,Integer[] resourceImages){
+    private MainViewModel mainViewModel;
+
+    public ResourceListAdapter(Context context,Integer[] resourceImages,MainViewModel mainViewModel){
         this.resourceImages = resourceImages;
-        this.galleryImages = null;
+        this.mainViewModel = mainViewModel;
         this.context = context;
-    }
-    public boolean isResourceList(){
-        return this.resourceImages != null;
     }
     @NonNull
     @Override
@@ -54,14 +39,12 @@ public class ImageListAdapter extends RecyclerView.Adapter<ImageListAdapter.Imag
 
     @Override
     public void onBindViewHolder(@NonNull ImageListViewHolder holder, @SuppressLint("RecyclerView") int position) {
-        if(galleryImages != null)holder.imageView.setImageURI(Uri.parse(galleryImages.get(position)));
-        else holder.imageView.setImageResource(resourceImages[position]);
+        holder.imageView.setImageResource(resourceImages[position]);
         holder.cardView.setBackgroundResource(R.drawable.card_view_style);
         MainActivity main = (MainActivity) context;
-        MainActivity.NextPevFragment fragment = (MainActivity.NextPevFragment) main.getSupportFragmentManager().findFragmentById(R.id.fragmentContainerView2);
         ViewGroup.LayoutParams expandedView = holder.cardView.getLayoutParams();
         View viewMain = main.getWindow().getDecorView();
-        boolean isExpanded = (position == mExpandedPosition);
+        boolean isExpanded = (position == mainViewModel.getCurrentResourcePos().getValue());
         viewMain.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
             @Override
             public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
@@ -88,22 +71,18 @@ public class ImageListAdapter extends RecyclerView.Adapter<ImageListAdapter.Imag
         });
 
         holder.cardView.setLayoutParams(expandedView);
-        if (isExpanded) previousExpandedPosition = position;
+        if (isExpanded) mainViewModel.setPreviousResourcePos(position);
         holder.cardView.setOnClickListener(view -> {
-            if(!isExpanded) mExpandedPosition = position;
-            main.viewPager.setCurrentItem(position);
-            if(galleryImages != null) fragment.setCurrentGalleryPosition(position);
-            else fragment.setCurrentResourcePosition(position);
-            fragment.ScrollCenterItem(position);
-            notifyItemChanged(previousExpandedPosition);
-            notifyItemChanged(position);
+            if(!isExpanded) mainViewModel.setCurrentResourcePos(position);
+            this.notifyItemChanged(mainViewModel.getPreviousResourcePosValue());
+            this.notifyItemChanged(position);
         });
     }
 
 
     @Override
     public int getItemCount() {
-        return (galleryImages != null) ? galleryImages.size() : resourceImages.length;
+        return resourceImages.length;
     }
 
     @Override
