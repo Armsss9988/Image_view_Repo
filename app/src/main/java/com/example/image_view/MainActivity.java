@@ -177,28 +177,12 @@ public class MainActivity extends AppCompatActivity{
 
 
         public void prev() {
-            if(recyclerView.getAdapter() instanceof ResourceListAdapter){
-                mainViewModel.setPreviousResourcePos(mainViewModel.getCurrentResourcePos().getValue());
-                mainViewModel.setCurrentResourcePos(mainViewModel.getCurrentResourcePosValue()-1);
-                notifyItemChange();
-            }
-            else{
-                mainViewModel.setPreviousGalleryPos(mainViewModel.getCurrentGalleryPos().getValue());
-                mainViewModel.setCurrentGalleryPos(mainViewModel.getCurrentGalleryPosValue()-1);
-                notifyItemChange();
-            }
+            MainActivity main = (MainActivity) getActivity();
+            main.viewPager.setCurrentItem(main.viewPager.getCurrentItem()-1);
         }
         public void next() {
-            if(recyclerView.getAdapter() instanceof ResourceListAdapter){
-                mainViewModel.setPreviousResourcePos(mainViewModel.getCurrentResourcePos().getValue());
-                mainViewModel.setCurrentResourcePos(mainViewModel.getCurrentResourcePos().getValue()+1);
-                notifyItemChange();
-            }
-            else{
-                mainViewModel.setPreviousGalleryPos(mainViewModel.getCurrentGalleryPos().getValue());
-                mainViewModel.setCurrentGalleryPos(mainViewModel.getCurrentGalleryPos().getValue()+1);
-                notifyItemChange();
-            }
+            MainActivity main = (MainActivity) getActivity();
+            main.viewPager.setCurrentItem(main.viewPager.getCurrentItem()+1);
         }
         void FixSizeView(View view , int width, int height){
             ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
