@@ -61,8 +61,6 @@ public class MainViewModel extends AndroidViewModel {
     public MutableLiveData<Integer> getPreviousResourcePos() {
         return previousResourcePos;
     }
-    public Integer getPreviousResourcePosValue(){ return previousResourcePos.getValue();}
-    public Integer getCurrentResourcePosValue(){ return currentResourcePos.getValue();}
 
     public void setPreviousResourcePos(Integer previousResourcePos) {
         this.previousResourcePos.setValue(previousResourcePos);
@@ -71,6 +69,13 @@ public class MainViewModel extends AndroidViewModel {
     public MutableLiveData<Integer> getPreviousGalleryPos() {
         return previousGalleryPos;
     }
+
+    public Integer getPreviousGalleryPosValue(){ return previousGalleryPos.getValue();}
+    public Integer getCurrentGalleryPosValue(){ return currentGalleryPos.getValue();}
+    public Integer getPreviousResourcePosValue(){ return previousResourcePos.getValue();}
+    public Integer getCurrentResourcePosValue(){ return currentResourcePos.getValue();}
+    public ImageAdapter getImageAdapterValue(){ return imageAdapter.getValue();}
+    public RecyclerView.Adapter getAdapterValue(){ return adapter.getValue();}
 
     public void setPreviousGalleryPos(Integer previousGalleryPos) {
         this.previousGalleryPos.setValue(previousGalleryPos);

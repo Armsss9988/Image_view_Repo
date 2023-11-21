@@ -21,9 +21,9 @@ import com.example.image_view.R;
 import java.util.ArrayList;
 
 public class ResourceListAdapter extends RecyclerView.Adapter<ResourceListAdapter.ImageListViewHolder> {
-    private Integer[] resourceImages;
-    private Context context;
-    private MainViewModel mainViewModel;
+    private final Integer[] resourceImages;
+    private final Context context;
+    private final MainViewModel mainViewModel;
 
     public ResourceListAdapter(Context context,Integer[] resourceImages,MainViewModel mainViewModel){
         this.resourceImages = resourceImages;
@@ -44,7 +44,7 @@ public class ResourceListAdapter extends RecyclerView.Adapter<ResourceListAdapte
         MainActivity main = (MainActivity) context;
         ViewGroup.LayoutParams expandedView = holder.cardView.getLayoutParams();
         View viewMain = main.getWindow().getDecorView();
-        boolean isExpanded = (position == mainViewModel.getCurrentResourcePos().getValue());
+        boolean isExpanded = (position == mainViewModel.getCurrentResourcePosValue());
         viewMain.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
             @Override
             public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {

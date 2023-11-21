@@ -64,17 +64,49 @@ public class MainActivity extends AppCompatActivity{
             fragmentScrollBtn = (NextPevFragment) fm.findFragmentById(R.id.fragmentContainerView2);
         }
         transaction.commit();
+        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                if(fragmentScrollBtn.recyclerView.getAdapter() instanceof ResourceListAdapter){
+                    mainViewModel.setPreviousResourcePos(position);
+                    fragmentScrollBtn.notifyItemChange();
+                }
+                else{
+                    mainViewModel.setPreviousGalleryPos(position);
+                    fragmentScrollBtn.notifyItemChange();
+                }
+            }
 
+            @Override
+            public void onPageSelected(int position) {
+
+                if(fragmentScrollBtn.recyclerView.getAdapter() instanceof ResourceListAdapter){
+                    mainViewModel.setPreviousResourcePos(mainViewModel.getCurrentResourcePos().getValue());
+                    mainViewModel.setCurrentResourcePos(position);
+                    fragmentScrollBtn.notifyItemChange();
+                }
+                else{
+                    mainViewModel.setPreviousGalleryPos(mainViewModel.getCurrentGalleryPos().getValue());
+                    mainViewModel.setCurrentGalleryPos(position);
+                    fragmentScrollBtn.notifyItemChange();
+                }
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
+            }
+        });
     }
     void liveDataObserve(){
         mainViewModel.getAdapter().observe(this, adapter -> {
             if(adapter instanceof ResourceListAdapter){
                 viewPager.setAdapter(new ImageAdapter(this,ResourceView.getInstance(this).GetImages()));
-                viewPager.setCurrentItem(mainViewModel.getCurrentResourcePos().getValue());
+                viewPager.setCurrentItem(mainViewModel.getCurrentResourcePosValue());
             }
             else {
                 viewPager.setAdapter(new ImageAdapter(this,GalleryView.getInstance(this).GetImages()));
-                viewPager.setCurrentItem(mainViewModel.getCurrentGalleryPos().getValue());
+                viewPager.setCurrentItem(mainViewModel.getCurrentGalleryPosValue());
             }
         });
         mainViewModel.getCurrentResourcePos().observe(this, val ->{
@@ -131,33 +163,41 @@ public class MainActivity extends AppCompatActivity{
         public LinearLayoutManager linearLayoutManager;
         public LinearLayout listPanel;
         public MainViewModel mainViewModel;
+        public void notifyItemChange(){
+            if(recyclerView.getAdapter() instanceof ResourceListAdapter){
+                recyclerView.getAdapter().notifyItemChanged(mainViewModel.getCurrentResourcePosValue());
+                recyclerView.getAdapter().notifyItemChanged(mainViewModel.getPreviousResourcePosValue());
+            }
+            else {
+                recyclerView.getAdapter().notifyItemChanged(mainViewModel.getCurrentGalleryPosValue());
+                recyclerView.getAdapter().notifyItemChanged(mainViewModel.getPreviousGalleryPosValue());
+            }
+
+        }
+
 
         public void prev() {
             if(recyclerView.getAdapter() instanceof ResourceListAdapter){
                 mainViewModel.setPreviousResourcePos(mainViewModel.getCurrentResourcePos().getValue());
-                mainViewModel.setCurrentResourcePos(mainViewModel.getCurrentResourcePos().getValue()-1);
-                recyclerView.getAdapter().notifyItemChanged(mainViewModel.getCurrentResourcePos().getValue());
-                recyclerView.getAdapter().notifyItemChanged(mainViewModel.getPreviousResourcePos().getValue());
+                mainViewModel.setCurrentResourcePos(mainViewModel.getCurrentResourcePosValue()-1);
+                notifyItemChange();
             }
             else{
                 mainViewModel.setPreviousGalleryPos(mainViewModel.getCurrentGalleryPos().getValue());
-                mainViewModel.setCurrentGalleryPos(mainViewModel.getCurrentGalleryPos().getValue()-1);
-                recyclerView.getAdapter().notifyItemChanged(mainViewModel.getCurrentGalleryPos().getValue());
-                recyclerView.getAdapter().notifyItemChanged(mainViewModel.getPreviousGalleryPos().getValue());
+                mainViewModel.setCurrentGalleryPos(mainViewModel.getCurrentGalleryPosValue()-1);
+                notifyItemChange();
             }
         }
         public void next() {
             if(recyclerView.getAdapter() instanceof ResourceListAdapter){
                 mainViewModel.setPreviousResourcePos(mainViewModel.getCurrentResourcePos().getValue());
                 mainViewModel.setCurrentResourcePos(mainViewModel.getCurrentResourcePos().getValue()+1);
-                recyclerView.getAdapter().notifyItemChanged(mainViewModel.getCurrentResourcePos().getValue());
-                recyclerView.getAdapter().notifyItemChanged(mainViewModel.getPreviousResourcePos().getValue());
+                notifyItemChange();
             }
             else{
                 mainViewModel.setPreviousGalleryPos(mainViewModel.getCurrentGalleryPos().getValue());
                 mainViewModel.setCurrentGalleryPos(mainViewModel.getCurrentGalleryPos().getValue()+1);
-                recyclerView.getAdapter().notifyItemChanged(mainViewModel.getCurrentGalleryPos().getValue());
-                recyclerView.getAdapter().notifyItemChanged(mainViewModel.getPreviousGalleryPos().getValue());
+                notifyItemChange();
             }
         }
         void FixSizeView(View view , int width, int height){
@@ -225,7 +265,7 @@ public class MainActivity extends AppCompatActivity{
                     btnSwitchView.setText(R.string.resource);
                     Log.i(TAG, "ViewModelObserve: Adapter Galley");
                     Log.i(TAG, "ViewModelObserve: Scroll to " + mainViewModel.currentGalleryPos.getValue());
-                    ScrollCenterItem(mainViewModel.getCurrentGalleryPos().getValue());
+                    ScrollCenterItem(mainViewModel.getCurrentGalleryPosValue());
 
                 }
                 Log.i(TAG, "ViewModelObserve: Adapter changed");
@@ -263,27 +303,19 @@ public class MainActivity extends AppCompatActivity{
             }
             else mainViewModel.setAdapter(new GalleryListAdapter(this.requireActivity(),GalleryView.getInstance(this.requireActivity()).GetImages(),mainViewModel));
             ViewModelObserve();
-            btnLeft.setOnClickListener(view -> {
-                prev();
-                ScrollCenterItem(main.viewPager.getCurrentItem());
-            });
-            btnRight.setOnClickListener(view -> {
-                next();
-                ScrollCenterItem(main.viewPager.getCurrentItem());
-            });
+            btnLeft.setOnClickListener(view -> prev());
+            btnRight.setOnClickListener(view -> next());
             btnSwitchView.setOnClickListener(view -> {
                 if(btnSwitchView.getText() == getResources().getString(R.string.gallery)){
                     if(!main.isHasPermission()){
                         main.checkPermissions();
                     }
                     else{
-                        btnSwitchView.setText(R.string.resource);
-                        mainViewModel.setAdapter(new GalleryListAdapter(main,GalleryView.getInstance(this.requireActivity()).GetImages(),mainViewModel));
+                        mainViewModel.setAdapter(new GalleryListAdapter(this.requireActivity(),GalleryView.getInstance(this.requireActivity()).GetImages(),mainViewModel));
                     }
                 }
                 else{
-                    btnSwitchView.setText(R.string.gallery);
-                    mainViewModel.setAdapter(new ResourceListAdapter(main,ResourceView.getInstance(this.requireActivity()).GetImages(),mainViewModel));
+                    mainViewModel.setAdapter(new ResourceListAdapter(this.requireActivity(),ResourceView.getInstance(this.requireActivity()).GetImages(),mainViewModel));
                 }
 
             });

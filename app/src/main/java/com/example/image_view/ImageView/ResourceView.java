@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.regex.Pattern;
 
 public class ResourceView {
-    private Integer[] images;
+    private final Integer[] images;
     private static ResourceView instance = null;
 
     public static synchronized ResourceView getInstance(Context context){
